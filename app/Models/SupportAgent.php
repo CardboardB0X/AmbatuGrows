@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+/**
+ * Class SupportAgent
+ * 
+ * @property int $agent_id
+ * @property string $name
+ * @property string|null $department
+ */
+class SupportAgent extends Model
+{
+    /**
+     * Disable Laravel automatic timestamps.
+     *
+     * @var bool
+     */
+    public $timestamps = false;
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'support_agent';
+
+    /**
+     * The primary key associated with the table.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'agent_id';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'name',
+        'department',
+    ];
+
+    /**
+     * Get the support tickets assigned to this agent.
+     *
+     * @return HasMany
+     */
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class, 'agent_id', 'agent_id');
+    }
+}

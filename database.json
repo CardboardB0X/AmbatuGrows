@@ -1,0 +1,65 @@
+{
+  "App\\Models\\Customer": {
+    "1": {
+      "customer_id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com",
+      "phone": "+1-555-0199"
+    },
+    "2": {
+      "customer_id": 2,
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "email": "jane.smith@example.com",
+      "phone": "+1-555-0144"
+    }
+  },
+  "App\\Models\\Product": {
+    "10": {
+      "product_id": 10,
+      "sku": "PROD-WIDG-10",
+      "name": "Super Widget",
+      "description": "High-performance industrial grade widget",
+      "category_id": 3,
+      "min_quantity_threshold": 5
+    },
+    "12": {
+      "product_id": 12,
+      "sku": "PROD-WIDG-12",
+      "name": "Mega Widget",
+      "description": "Enterprise-scale heavy duty widget",
+      "category_id": 3,
+      "min_quantity_threshold": 2
+    }
+  },
+  "App\\Models\\InventoryLocation": {
+    "101": {
+      "inventory_id": 101,
+      "product_id": 10,
+      "warehouse_id": 1,
+      "zone": "A1",
+      "quantity": 1,
+      "expiration_date": "2026-07-01"
+    },
+    "102": {
+      "inventory_id": 102,
+      "product_id": 10,
+      "warehouse_id": 2,
+      "zone": "B2",
+      "quantity": 3,
+      "expiration_date": "2026-08-01"
+    },
+    "103": {
+      "inventory_id": 103,
+      "product_id": 12,
+      "warehouse_id": 1,
+      "zone": "A2",
+      "quantity": 5,
+      "expiration_date": null
+    }
+  },
+  "App\\Models\\SalesOrder": {},
+  "App\\Models\\OrderItem": {},
+  "App\\Models\\StockTransaction": {}
+}

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmbatuGrow - ERP System</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- External CSS -->
+    <link rel="stylesheet" href="/public/app.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .workflow-step-btn:hover {
+            border-color: var(--accent-color) !important;
+            background: rgba(255,255,255,0.05) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .workflow-step-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="app-sidebar">
+            <div class="brand" style="position:relative; width:100%; display:flex; align-items:center; gap:12px;">
+                <div class="brand-backdrop">
+                    <i class="fa-solid fa-seedling brand-icon"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>AMBATUGROW</h1>
+                    <span>ERP SYSTEM</span>
+                </div>
+                <button id="sidebar-toggle-btn" class="btn-text" style="color:rgba(255,255,255,0.7); position:absolute; right:0; top:50%; transform:translateY(-50%); border:none; background:none; cursor:pointer; text-decoration:none; font-size:15px; padding:4px; display:flex; align-items:center; justify-content:center;">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-tab="inventory" data-tooltip="Inventory Tracking"><i class="fa-solid fa-boxes-stacked"></i> <span>Inventory Tracking</span></a>
+                <a href="#" class="nav-item" data-tab="transactions" data-tooltip="Stock Transactions"><i class="fa-solid fa-right-left"></i> <span>Stock Transactions</span></a>
+                <a href="#" class="nav-item" data-tab="locations" data-tooltip="Warehouse Tracking"><i class="fa-solid fa-map-location-dot"></i> <span>Warehouse Location Tracking</span></a>
+                <a href="#" class="nav-item" data-tab="reports" data-tooltip="Inventory Reporting & Alerts"><i class="fa-solid fa-square-poll-horizontal"></i> <span>Inventory Reporting & Alerts</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <nav class="nav-menu" style="gap:4px; margin-bottom:12px; flex-grow:0;">
+                    <a href="#" class="nav-item" data-tab="settings" data-tooltip="Settings"><i class="fa-solid fa-gear"></i> <span>Settings</span></a>
+                    <a href="#" class="nav-item" data-tab="support" data-tooltip="Support"><i class="fa-solid fa-circle-question"></i> <span>Support</span></a>
+                </nav>
+                <div class="status-indicator">
+                    <span class="pulse-dot"></span>
+                    <span>Live MySQL Connected</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header" style="display:flex; justify-content:space-between; align-items:center; width:100%; border-bottom:1px solid var(--border-color); padding-bottom:16px; margin-bottom:24px;">
+                <div class="header-title">
+                    <h2 id="page-title" style="color: var(--color-accent); font-weight: 700; font-size: 20px;">Inventory Tracking Terminal</h2>
+                </div>
+                
+                <div class="search-container" style="position:relative; margin-left:auto; margin-right: 20px; width: 260px;">
+                    <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:12px;"></i>
+                    <input type="text" id="global-search-input" placeholder="Search inventory..." style="width:100%; padding: 8px 60px 8px 32px; border: 1px solid var(--border-color); border-radius:4px; font-size:12px; outline:none; background:#ffffff;">
+                    <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:9px; font-weight:700; color:var(--text-muted); border:1px solid var(--border-color); border-radius:3px; padding:2px 4px; background:#f8fafc; pointer-events:none; font-family:monospace; line-height:1;">Ctrl K</span>
+                </div>
+
+                <div class="header-actions" style="display:flex; align-items:center; gap:16px;">
+                    <button id="theme-toggle-btn" class="btn btn-text" title="Toggle Light/Dark Theme" style="padding:0; border:none; background:none; font-size:15px; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <button id="reset-db-btn" class="btn btn-text" title="Reset Database" style="padding:0; border:none; background:none; font-size:15px; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                    <div style="font-size:15px; color:var(--text-muted); cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center;">
+                        <i class="fa-solid fa-bell"></i>
+                        <span style="position:absolute; top:-2px; right:-2px; width:6px; height:6px; background:#ef4444; border-radius:50%;"></span>
+                    </div>
+                    <div style="font-size:15px; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                        <i class="fa-solid fa-table-cells"></i>
+                    </div>
+                    <div class="user-badge" style="display:flex; align-items:center; gap:8px; border:none; padding:0; background:none; position:relative; cursor:pointer;" id="header-user-badge">
+                        <div class="avatar" style="width:30px; height:30px; border-radius:50%; background:#dbeafe; display:flex; align-items:center; justify-content:center; color:#2563eb; font-size:12px;"><i class="fa-solid fa-user"></i></div>
+                        <span id="header-user-role" style="font-size:12px; font-weight:600; color:var(--text-primary); margin-right:4px;">Inventory Officer</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size:9px; color:var(--text-muted);"></i>
+                        
+                        <div id="header-role-dropdown" class="hidden" style="position:absolute; right:0; top:36px; background:#ffffff; border:1px solid var(--border-color); border-radius:4px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); width:180px; z-index:9999; display:flex; flex-direction:column; padding:4px 0;">
+                            <!-- Populated from JS -->
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- =========================================================================
+               TAB: INVENTORY TRACKING (MOCKUP DESIGN)
+               ========================================================================= -->
+            <div id="tab-inventory" class="tab-pane active">
+                <div style="display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; width: 100%;">
+                    
+                    <!-- Left Column: Controls & Master Inventory Table -->
+                    <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+                        
+                        <!-- Top Controls Row -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+                            <button id="add-product-btn" class="btn btn-primary" style="padding: 10px 16px; font-weight:600; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-plus"></i> Add New Inventory Item
+                            </button>
+                            
+                            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                                <div class="form-group" style="margin-bottom:0; display:flex; align-items:center; gap:8px;">
+                                    <label for="filter-warehouse" style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; white-space:nowrap;">Warehouse</label>
+                                    <div class="select-wrapper" style="width: 140px;">
+                                        <select id="filter-warehouse" style="padding: 6px 10px; font-size:12px;">
+                                            <option value="">All Warehouses</option>
+                                            <option value="1">Warehouse A</option>
+                                            <option value="2">Warehouse B</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-bottom:0; display:flex; align-items:center; gap:8px;">
+                                    <label for="filter-category" style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; white-space:nowrap;">Category</label>
+                                    <div class="select-wrapper" style="width: 140px;">
+                                        <select id="filter-category" style="padding: 6px 10px; font-size:12px;">
+                                            <option value="">All Categories</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-bottom:0; display:flex; align-items:center; gap:8px;">
+                                    <label for="filter-status" style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; white-space:nowrap;">Status</label>
+                                    <div class="select-wrapper" style="width: 140px;">
+                                        <select id="filter-status" style="padding: 6px 10px; font-size:12px;">
+                                            <option value="">All Statuses</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Obsolete">Obsolete</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Master Inventory Tracking Card -->
+                        <section class="card">
+                            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                                <h3><i class="fa-solid fa-boxes-stacked card-icon"></i> Master Inventory Tracking</h3>
+                                <button id="export-csv-btn" class="btn btn-text" style="font-size:11px; font-weight:700; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+                                    Export CSV <i class="fa-solid fa-download"></i>
+                                </button>
+                            </div>
+                            <div class="card-body" style="padding:0;">
+                                <div class="table-container">
+                                    <table id="inventory-master-table">
+                                        <thead style="background:#f8fafc; border-bottom: 1px solid var(--border-color);">
+                                            <tr>
+                                                <th id="sort-sku" style="cursor:pointer; user-select:none;">SKU <i class="fa-solid fa-sort" style="font-size:8px; margin-left:4px; opacity:0.6;"></i></th>
+                                                <th id="sort-name" style="cursor:pointer; user-select:none;">Item Name <i class="fa-solid fa-sort" style="font-size:8px; margin-left:4px; opacity:0.6;"></i></th>
+                                                <th>Description</th>
+                                                <th>Category</th>
+                                                <th id="sort-qty" style="cursor:pointer; user-select:none;">Stock Qty <i class="fa-solid fa-sort" style="font-size:8px; margin-left:4px; opacity:0.6;"></i></th>
+                                                <th>UoM</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td colspan="8" class="text-center">Loading master inventory...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Right Column: Info Widget Deck -->
+                    <div style="display: flex; flex-direction: column; gap: 20px; flex-shrink: 0;">
+                        
+                        <!-- Low Stock Warning Widget -->
+                        <section class="card" style="background:#fffbeb; border: 1px solid #fef3c7; color:#92400e;">
+                            <div class="card-body" style="display:flex; gap:12px; align-items:flex-start; padding: 16px;">
+                                <i class="fa-solid fa-triangle-exclamation" style="font-size:18px; margin-top:2px;"></i>
+                                <div>
+                                    <h4 style="font-size:13px; font-weight:700; margin-bottom:4px; color:#92400e;">Low Stock Warning</h4>
+                                    <p style="font-size:11px; line-height:1.4; color:#b45309;" id="low-stock-widget-text">0 items below minimum threshold. Action required for replenishment.</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Zone Density Widget -->
+                        <section class="card">
+                            <div class="card-header">
+                                <h3><i class="fa-solid fa-map-pin card-icon"></i> Zone Density</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="zone-density-widget-container" style="display:flex; flex-direction:column; gap:12px;">
+                                    <!-- Dynamic zone progress bars -->
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Recent Logs Widget -->
+                        <section class="card">
+                            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                                <h3><i class="fa-solid fa-clock-rotate-left card-icon"></i> Recent Logs</h3>
+                                <button id="view-all-logs-btn" class="btn btn-text" style="font-size:11px; font-weight:700; color:var(--color-accent); border:none; padding:0; background:none; cursor:pointer;">View All</button>
+                            </div>
+                            <div class="card-body" style="padding:16px;">
+                                <div id="recent-logs-timeline" style="display:flex; flex-direction:column; gap:14px; position:relative;">
+                                    <!-- Dynamic timeline logs -->
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =========================================================================
+               TAB: STOCK TRANSACTIONS
+               ========================================================================= -->
+            <div id="tab-transactions" class="tab-pane">
+                <div class="dashboard-grid">
+                    
+                    <!-- Left: Inter-Warehouse Transfer -->
+                    <section class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-shuffle card-icon"></i> Inter-Warehouse Transfer</h3>
+                            <span class="badge badge-accent">POST /api/transfer-stock</span>
+                        </div>
+                        <form id="stock-transfer-form" class="card-body">
+                            <div class="form-group">
+                                <label for="transfer-product">Select Product</label>
+                                <div class="select-wrapper">
+                                    <select id="transfer-product" required>
+                                        <option value="" disabled selected>Choose product...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="calculations-grid" style="margin-top:0; padding-top:0; border:none; margin-bottom:10px;">
+                                <div class="form-group">
+                                    <label for="transfer-from-wh">From Warehouse</label>
+                                    <div class="select-wrapper">
+                                        <select id="transfer-from-wh" required>
+                                            <option value="1">Warehouse 1</option>
+                                            <option value="2">Warehouse 2</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="transfer-from-zone">From Zone</label>
+                                    <input type="text" id="transfer-from-zone" value="A1" required>
+                                    <div style="font-size: 10px; margin-top: 4px; color: var(--text-muted);">Available: <strong id="transfer-avail-stock" style="color:var(--accent-color);">0</strong> units</div>
+                                </div>
+                            </div>
+                            <div class="calculations-grid" style="margin-top:0; padding-top:0; border:none; margin-bottom:10px;">
+                                <div class="form-group">
+                                    <label for="transfer-to-wh">To Warehouse</label>
+                                    <div class="select-wrapper">
+                                        <select id="transfer-to-wh" required>
+                                            <option value="1">Warehouse 1</option>
+                                            <option value="2" selected>Warehouse 2</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="transfer-to-zone">To Zone</label>
+                                    <input type="text" id="transfer-to-zone" value="B1" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="transfer-qty">Quantity to Transfer</label>
+                                <input type="number" id="transfer-qty" value="1" min="1" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fa-solid fa-right-left"></i> Execute Transfer
+                            </button>
+                        </form>
+                    </section>
+
+                    <!-- Right: Direct Stock Adjustment -->
+                    <section class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-screwdriver-wrench card-icon"></i> Direct Stock Adjustment</h3>
+                        </div>
+                        <form id="stock-adjust-form" class="card-body">
+                            <div class="form-group">
+                                <label for="adjust-product">Select Product</label>
+                                <div class="select-wrapper">
+                                    <select id="adjust-product" required>
+                                        <option value="" disabled selected>Choose product...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="calculations-grid" style="margin-top:0; padding-top:0; border:none; margin-bottom:10px;">
+                                <div class="form-group">
+                                    <label for="adjust-warehouse">Warehouse</label>
+                                    <div class="select-wrapper">
+                                        <select id="adjust-warehouse" required>
+                                            <option value="1">Warehouse 1</option>
+                                            <option value="2">Warehouse 2</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="adjust-zone">Zone</label>
+                                    <input type="text" id="adjust-zone" value="A1" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="adjust-qty">Quantity (+/-)</label>
+                                <input type="number" id="adjust-qty" value="10" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="adjust-expiration">Expiration Date</label>
+                                <input type="date" id="adjust-expiration">
+                            </div>
+                            <button type="submit" class="btn btn-secondary btn-block">
+                                <i class="fa-solid fa-check"></i> Apply Adjustment
+                            </button>
+                        </form>
+                    </section>
+                </div>
+            </div>
+
+            <!-- =========================================================================
+               TAB: WAREHOUSE LOCATION TRACKING
+               ========================================================================= -->
+            <div id="tab-locations" class="tab-pane">
+                <section class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-map-location-dot card-icon"></i> Warehouse Zone Finder (Reduce Search Time)</h3>
+                    </div>
+                    <div class="card-body">
+                        <p style="font-size:11px; margin-bottom:12px; color:var(--text-muted);">Type a product SKU or name to instantly map its active warehouse zones and stock coordinates.</p>
+                        <div class="form-group">
+                            <input type="text" id="zone-finder-search" placeholder="Type SKU or Name (e.g. SEED-TOM-01)...">
+                        </div>
+                        <div class="table-container">
+                            <table id="zone-finder-results-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Warehouse</th>
+                                        <th>Zone</th>
+                                        <th>Stock Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="text-center">Start typing to search coordinates...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- =========================================================================
+               TAB: INVENTORY REPORTING & ALERTS
+               ========================================================================= -->
+            <div id="tab-reports" class="tab-pane">
+                <div class="dashboard-grid">
+                    
+                    <!-- Left: Min/Max thresholds report -->
+                    <section class="card">
+                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3><i class="fa-solid fa-square-poll-horizontal card-icon"></i> Min / Max Stock Level Report</h3>
+                            <button id="add-product-btn-reports" class="btn btn-primary btn-action edit-product-btn" style="padding: 2px 8px; font-size:11px;"><i class="fa-solid fa-plus"></i> Catalog</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container" style="max-height: 480px; overflow-y: auto;">
+                                <table id="thresholds-report-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product SKU</th>
+                                            <th>Product Name</th>
+                                            <th>Min Limit</th>
+                                            <th>Max Limit</th>
+                                            <th>Current Stock</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Dynamic Rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Right: Perishable expiration alerts -->
+                    <section class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-hourglass-half card-icon"></i> Perishable Expiration Alerts</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container" style="max-height: 480px; overflow-y: auto;">
+                                <table id="expiry-alerts-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Location</th>
+                                            <th>Expiration</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Dynamic Alerts -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+
+
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden">
+        <i class="toast-icon"></i>
+        <div class="toast-content">
+            <h4 class="toast-title">Success</h4>
+            <p class="toast-message">Action completed.</p>
+        </div>
+        <button class="toast-close-btn">&times;</button>
+    </div>
+
+    <!-- Transaction Trace Modal -->
+    <div id="trace-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-code"></i> Database Transaction Trace Logs</h3>
+                <button class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Real-time transaction trace from DB facade engine execution:</p>
+                <div class="trace-block">
+                    <h5>Transaction Log</h5>
+                    <pre id="trace-transaction-log"></pre>
+                </div>
+                <div class="trace-block">
+                    <h5>Pessimistic Locks Acquired</h5>
+                    <pre id="trace-locks-log"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-close-btn-action">Close</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Product CRUD Modal (Add / Edit) -->
+    <div id="product-modal" class="modal hidden">
+        <div class="modal-content" style="width: 450px;">
+            <div class="modal-header">
+                <h3 id="product-modal-title"><i class="fa-solid fa-boxes-packing"></i> Add New Product</h3>
+                <button id="product-modal-close-btn" class="modal-close-btn">&times;</button>
+            </div>
+            <form id="product-form" class="modal-body">
+                <input type="hidden" id="prod-id">
+                <div class="form-group">
+                    <label for="prod-sku">Product SKU</label>
+                    <input type="text" id="prod-sku" placeholder="e.g. PROD-WIDG-15" required>
+                </div>
+                <div class="form-group">
+                    <label for="prod-name">Product Name</label>
+                    <input type="text" id="prod-name" placeholder="e.g. Giga Widget" required>
+                </div>
+                <div class="form-group">
+                    <label for="prod-desc">Description</label>
+                    <input type="text" id="prod-desc" placeholder="Details about materials/grade...">
+                </div>
+                <div class="form-group">
+                    <label for="prod-threshold">Min Quantity Threshold (Low Stock Alert limit)</label>
+                    <input type="number" id="prod-threshold" value="5" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="prod-max-threshold">Max Quantity Threshold (Overstock Alert limit)</label>
+                    <input type="number" id="prod-max-threshold" value="50" min="1" required>
+                </div>
+                <div class="modal-footer" style="padding: 10px 0 0 0; border: none;">
+                    <button type="button" id="product-modal-cancel-btn" class="btn btn-secondary" style="margin-right: auto;">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- External Script -->
+    <script src="/public/app.js"></script>
+</body>
+</html>
