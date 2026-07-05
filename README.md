@@ -66,7 +66,7 @@ erDiagram
 
     Products {
         int product_id PK
-        string sku UNIQUE
+        string sku
         string name
         string description
         int category_id FK
@@ -122,8 +122,8 @@ erDiagram
     }
 
     Product_Suppliers {
-        int product_id PK_FK
-        int supplier_id PK_FK
+        int product_id FK
+        int supplier_id FK
         string supplier_sku
         decimal unit_price
         int lead_time_days
@@ -132,7 +132,7 @@ erDiagram
 
     Purchase_Orders {
         int po_id PK
-        string po_number UNIQUE
+        string po_number
         int supplier_id FK
         int requisition_id FK
         int payment_term_id FK
