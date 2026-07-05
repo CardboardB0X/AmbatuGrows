@@ -9,19 +9,22 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS `Roles`;
 CREATE TABLE `Roles` (
-    `role_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `role_name` VARCHAR(50) NOT NULL,
-    `description` TEXT NULL
+    `role_id` VARCHAR(20) PRIMARY KEY,
+    `role_name` VARCHAR(100) UNIQUE NOT NULL,
+    `description` VARCHAR(255) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 DROP TABLE IF EXISTS `Users`;
 CREATE TABLE `Users` (
-    `user_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `username` VARCHAR(50) NOT NULL,
-    `password_hash` VARCHAR(255) NOT NULL,
+    `user_id` VARCHAR(20) PRIMARY KEY,
+    `role_id` VARCHAR(20) NOT NULL,
+    `username` VARCHAR(50) UNIQUE NOT NULL,
+    `password` VARCHAR(255) NOT NULL,
+    `first_name` VARCHAR(100) NOT NULL,
+    `last_name` VARCHAR(100) NOT NULL,
     `email` VARCHAR(100) NOT NULL,
-    `role_id` INT NOT NULL,
-    `status` ENUM('Active', 'Inactive', 'Suspended') NOT NULL DEFAULT 'Active',
+    `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`role_id`) REFERENCES `Roles` (`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -174,7 +177,7 @@ CREATE TABLE `Purchase_Orders` (
     `currency_id` INT NOT NULL,
     `status` VARCHAR(50) NOT NULL,
     `order_date` DATETIME NOT NULL,
-    `created_by` INT NOT NULL,
+    `created_by` VARCHAR(20) NOT NULL,
     FOREIGN KEY (`supplier_id`) REFERENCES `Suppliers` (`supplier_id`),
     FOREIGN KEY (`payment_term_id`) REFERENCES `Payment_Terms` (`payment_term_id`),
     FOREIGN KEY (`currency_id`) REFERENCES `Currencies` (`currency_id`),
@@ -222,25 +225,17 @@ CREATE TABLE `Customers` (
     FOREIGN KEY (`address_id`) REFERENCES `Addresses` (`address_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-DROP TABLE IF EXISTS `Sales_Representatives`;
-CREATE TABLE `Sales_Representatives` (
-    `rep_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `name` VARCHAR(100) NOT NULL,
-    `email` VARCHAR(100) NOT NULL,
-    `phone` VARCHAR(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 DROP TABLE IF EXISTS `Sales_Orders`;
 CREATE TABLE `Sales_Orders` (
     `order_id` INT AUTO_INCREMENT PRIMARY KEY,
     `customer_id` INT NOT NULL,
-    `rep_id` INT NOT NULL,
+    `rep_id` VARCHAR(20) NOT NULL,
     `order_date` DATETIME NOT NULL,
     `status` VARCHAR(50) NOT NULL,
     `payment_term_id` INT NOT NULL,
     `currency_id` INT NOT NULL,
     FOREIGN KEY (`customer_id`) REFERENCES `Customers` (`customer_id`),
-    FOREIGN KEY (`rep_id`) REFERENCES `Sales_Representatives` (`rep_id`),
+    FOREIGN KEY (`rep_id`) REFERENCES `Users` (`user_id`),
     FOREIGN KEY (`payment_term_id`) REFERENCES `Payment_Terms` (`payment_term_id`),
     FOREIGN KEY (`currency_id`) REFERENCES `Currencies` (`currency_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

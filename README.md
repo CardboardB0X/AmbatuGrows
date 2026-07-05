@@ -12,18 +12,21 @@ The database schema represents a 5-module enterprise architecture supporting cor
 erDiagram
     %% Core & Master Data
     Roles {
-        int role_id PK
-        string role_name
-        string description
+        varchar role_id PK
+        varchar role_name
+        varchar description
     }
 
     Users {
-        int user_id PK
-        string username
-        string password_hash
-        string email
-        int role_id FK
+        varchar user_id PK
+        varchar role_id FK
+        varchar username
+        varchar password
+        varchar first_name
+        varchar last_name
+        varchar email
         string status
+        timestamp created_at
     }
 
     Addresses {
@@ -139,7 +142,7 @@ erDiagram
         int currency_id FK
         string status
         datetime order_date
-        int created_by FK
+        varchar created_by FK
     }
 
     PO_Items {
@@ -170,17 +173,10 @@ erDiagram
         int address_id FK
     }
 
-    Sales_Representatives {
-        int rep_id PK
-        string name
-        string email
-        string phone
-    }
-
     Sales_Orders {
         int order_id PK
         int customer_id FK
-        int rep_id FK
+        varchar rep_id FK
         datetime order_date
         string status
         int payment_term_id FK
@@ -248,7 +244,7 @@ erDiagram
     Purchase_Orders ||--o{ Supplier_Invoices : "billed_by"
 
     Customers ||--o{ Sales_Orders : "places"
-    Sales_Representatives ||--o{ Sales_Orders : "manages"
+    Users ||--o{ Sales_Orders : "manages"
     Sales_Orders ||--o{ Billing_Details : "billing_ref"
 
     Customers ||--o{ Tickets : "files"
@@ -263,18 +259,21 @@ erDiagram
 
 #### `Roles`
 User clearance and operations access control configuration profiles.
-* `role_id` (INT, PK): Unique identification key.
-* `role_name` (VARCHAR): Display label for permission tiers (e.g. `Warehouse Admin`, `Sales Rep`).
-* `description` (TEXT): Breakdown details of features permitted.
+* `role_id` (VARCHAR(20), PK): Unique identification key.
+* `role_name` (VARCHAR(100), UNIQUE): Display label for permission tiers.
+* `description` (VARCHAR(255)): Breakdown details of features permitted.
 
 #### `Users`
 Individual accounts belonging to employees accessing the system terminal.
-* `user_id` (INT, PK): Unique account identifier.
-* `username` (VARCHAR): Unique username string.
-* `password_hash` (VARCHAR): Secure password encryption hash.
-* `email` (VARCHAR): Primary employee email.
-* `role_id` (INT, FK): Links back to the assigned Role.
-* `status` (ENUM): User context state (`Active`, `Inactive`, `Suspended`).
+* `user_id` (VARCHAR(20), PK): Unique account identifier.
+* `role_id` (VARCHAR(20), FK): Links back to the assigned Role.
+* `username` (VARCHAR(50), UNIQUE): Unique username string.
+* `password` (VARCHAR(255)): Secure password encryption hash.
+* `first_name` (VARCHAR(100)): User's first name.
+* `last_name` (VARCHAR(100)): User's last name.
+* `email` (VARCHAR(100)): Primary employee email.
+* `status` (ENUM('Active', 'Inactive'), DEFAULT 'Active'): User context state.
+* `created_at` (TIMESTAMP): Creation timestamp.
 
 #### `Addresses`
 Central address directory mapped to warehouses, customers, suppliers, billing, and shipments.
@@ -396,7 +395,7 @@ Issued purchase orders tracking restocking.
 * `currency_id` (INT, FK): Billing currency.
 * `status` (VARCHAR): Order status (`Issued`, `Completed`, `Draft`).
 * `order_date` (DATETIME): PO creation timestamp.
-* `created_by` (INT, FK): Employee user placing the PO.
+* `created_by` (VARCHAR(20), FK): Employee user placing the PO.
 
 #### `PO_Items`
 Individual item line details ordered within a Purchase Order.
@@ -429,18 +428,11 @@ Customer profile directories.
 * `phone` (VARCHAR): Phone details.
 * `address_id` (INT, FK): Customer shipping location coordinates.
 
-#### `Sales_Representatives`
-Sales personnel managing client accounts.
-* `rep_id` (INT, PK): Unique representative key.
-* `name` (VARCHAR): Representative name.
-* `email` (VARCHAR): Corporate email.
-* `phone` (VARCHAR): Secondary phone contact.
-
 #### `Sales_Orders`
 Storefront client checkout transactions.
 * `order_id` (INT, PK): Unique Sales Order identification key.
 * `customer_id` (INT, FK): Buyer profile link.
-* `rep_id` (INT, FK): Managing agent link.
+* `rep_id` (VARCHAR(20), FK): Managing agent link referencing Users.
 * `order_date` (DATETIME): Checkout date.
 * `status` (VARCHAR): Processing state (`Completed`, `Pending`, `Cancelled`).
 * `payment_term_id` (INT, FK): Billing payment terms.
@@ -490,19 +482,22 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS `Roles`;
 CREATE TABLE `Roles` (
-    `role_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `role_name` VARCHAR(50) NOT NULL,
-    `description` TEXT NULL
+    `role_id` VARCHAR(20) PRIMARY KEY,
+    `role_name` VARCHAR(100) UNIQUE NOT NULL,
+    `description` VARCHAR(255) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 DROP TABLE IF EXISTS `Users`;
 CREATE TABLE `Users` (
-    `user_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `username` VARCHAR(50) NOT NULL,
-    `password_hash` VARCHAR(255) NOT NULL,
+    `user_id` VARCHAR(20) PRIMARY KEY,
+    `role_id` VARCHAR(20) NOT NULL,
+    `username` VARCHAR(50) UNIQUE NOT NULL,
+    `password` VARCHAR(255) NOT NULL,
+    `first_name` VARCHAR(100) NOT NULL,
+    `last_name` VARCHAR(100) NOT NULL,
     `email` VARCHAR(100) NOT NULL,
-    `role_id` INT NOT NULL,
-    `status` ENUM('Active', 'Inactive', 'Suspended') NOT NULL DEFAULT 'Active',
+    `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`role_id`) REFERENCES `Roles` (`role_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -655,7 +650,7 @@ CREATE TABLE `Purchase_Orders` (
     `currency_id` INT NOT NULL,
     `status` VARCHAR(50) NOT NULL,
     `order_date` DATETIME NOT NULL,
-    `created_by` INT NOT NULL,
+    `created_by` VARCHAR(20) NOT NULL,
     FOREIGN KEY (`supplier_id`) REFERENCES `Suppliers` (`supplier_id`),
     FOREIGN KEY (`payment_term_id`) REFERENCES `Payment_Terms` (`payment_term_id`),
     FOREIGN KEY (`currency_id`) REFERENCES `Currencies` (`currency_id`),
@@ -703,25 +698,17 @@ CREATE TABLE `Customers` (
     FOREIGN KEY (`address_id`) REFERENCES `Addresses` (`address_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-DROP TABLE IF EXISTS `Sales_Representatives`;
-CREATE TABLE `Sales_Representatives` (
-    `rep_id` INT AUTO_INCREMENT PRIMARY KEY,
-    `name` VARCHAR(100) NOT NULL,
-    `email` VARCHAR(100) NOT NULL,
-    `phone` VARCHAR(20) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 DROP TABLE IF EXISTS `Sales_Orders`;
 CREATE TABLE `Sales_Orders` (
     `order_id` INT AUTO_INCREMENT PRIMARY KEY,
     `customer_id` INT NOT NULL,
-    `rep_id` INT NOT NULL,
+    `rep_id` VARCHAR(20) NOT NULL,
     `order_date` DATETIME NOT NULL,
     `status` VARCHAR(50) NOT NULL,
     `payment_term_id` INT NOT NULL,
     `currency_id` INT NOT NULL,
     FOREIGN KEY (`customer_id`) REFERENCES `Customers` (`customer_id`),
-    FOREIGN KEY (`rep_id`) REFERENCES `Sales_Representatives` (`rep_id`),
+    FOREIGN KEY (`rep_id`) REFERENCES `Users` (`user_id`),
     FOREIGN KEY (`payment_term_id`) REFERENCES `Payment_Terms` (`payment_term_id`),
     FOREIGN KEY (`currency_id`) REFERENCES `Currencies` (`currency_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
