@@ -766,6 +766,122 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 ---
 
+## ⚙️ Core Logic Functions
+
+The AmbatuGrow ERP uses a hybrid architecture combining a **custom PHP Database Facade (PDO-backed Eloquent Stub Engine)** on the backend and **Modern Vanilla Javascript Event Controllers** on the frontend.
+
+### 1. Database Transaction & Pessimistic Lock Engine (PHP)
+The backend architecture implements Laravel Eloquent stubs that simulate enterprise-grade pessimistic concurrency controls using a PHP/PDO wrapper class `MockDB`.
+
+* **Active Locking (`lockForUpdate`)**:
+  When performing stock transfers or adjustments, the system acquires a simulated row-level pessimistic lock (`FOR UPDATE`) to prevent concurrent modification anomalies:
+  ```php
+  class QueryBuilder {
+      // ...
+      public function lockForUpdate() {
+          \MockDB::logLock($this->modelClass, $this->wheres);
+          return $this;
+      }
+  }
+  ```
+* **Transaction Facade (`DB::beginTransaction`, `DB::commit`, `DB::rollBack`)**:
+  Protects inventory updates. If an operation fails mid-way, the transaction rolls back the MySQL database modifications to maintain schema integrity:
+  ```php
+  namespace Illuminate\Support\Facades {
+      class DB {
+          public static function beginTransaction() {
+              \MockDB::beginTransaction();
+          }
+          public static function commit() {
+              \MockDB::commit();
+          }
+          public static function rollBack() {
+              \MockDB::rollBack();
+          }
+      }
+  }
+  ```
+
+---
+
+### 2. Live Inventory Search, Filters & Sorting (Javascript)
+The frontend handles data rendering, sorting, and multi-criteria filters client-side without page refreshes.
+
+* **Multi-Criteria Table Rendering**:
+  Event listeners on filters (Warehouse select, Category select, Status select) and search inputs capture changes and rebuild the DOM rows:
+  ```javascript
+  function renderInventoryTable() {
+      const tbody = document.querySelector('#inventory-table tbody');
+      let filtered = [...state.inventory];
+
+      // 1. Apply Global SKU/Name search text filter
+      const searchVal = globalSearch.value.toLowerCase();
+      if (searchVal) {
+          filtered = filtered.filter(item => 
+              item.p.sku.toLowerCase().includes(searchVal) || 
+              item.p.name.toLowerCase().includes(searchVal)
+          );
+      }
+
+      // 2. Apply Warehouse Location coordinate filter
+      const whVal = filterWh.value;
+      if (whVal) {
+          filtered = filtered.filter(item => item.warehouse_id === parseInt(whVal));
+      }
+
+      // 3. Sort Table Column dynamically
+      if (state.sortColumn === 'qty') {
+          filtered.sort((a, b) => state.sortDirection === 'asc' 
+              ? a.quantity - b.quantity 
+              : b.quantity - a.quantity
+          );
+      }
+      // Rebuild Table DOM elements...
+  }
+  ```
+* **Interactive Table Header Sorting**:
+  Header click listeners call `toggleSort()` to flip sort state directions:
+  ```javascript
+  function toggleSort(column) {
+      if (state.sortColumn === column) {
+          state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+          state.sortColumn = column;
+          state.sortDirection = 'asc';
+      }
+      renderInventoryTable();
+  }
+  ```
+
+---
+
+### 3. Pessimistic Lock & Transaction Trace Visualizer (JS + PHP API)
+When stock adjustments or transfers are successfully committed, the backend returns the transaction log and pessimistic lock log arrays in the JSON response. The client-side visualizer parses and displays this execution trace live:
+```javascript
+function showTraceLogs(txLogs, lockLogs) {
+    traceModal.classList.remove('hidden');
+    traceTxLog.textContent = txLogs && txLogs.length 
+        ? txLogs.join('\n') 
+        : 'No transaction events logged.';
+    traceLocksLog.textContent = lockLogs && lockLogs.length 
+        ? lockLogs.join('\n') 
+        : 'No pessimistic locks acquired.';
+}
+```
+
+---
+
+### 4. Theme Memory Persistence (Javascript + CSS Variables)
+Theme preference is toggled client-side and saved to browser memory to persist across sessions:
+```javascript
+themeToggleBtn.addEventListener('click', () => {
+    const isDark = document.body.classList.toggle('dark-theme');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+});
+```
+
+---
+
 ## 🛠️ Getting Started
 
 ### Prerequisites
