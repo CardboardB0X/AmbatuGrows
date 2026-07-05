@@ -1,5 +1,6 @@
 # AmbatuGrow ERP - Inventory Department Terminal
 # https://prod.liveshare.vsengsaas.visualstudio.com/join?A9CE972B83C9B0C5D1354C73CD0E6CF1F304
+# https://www.figma.com/design/dTLT8Fenkme8mKkDoVWuiv/PROCUREMENT---its-sectors?node-id=25-216&p=f&t=xTpebCwOO3muTteI-0
 Welcome to the **AmbatuGrow ERP** repository. This branch is isolated and optimized exclusively for the **Inventory Department**, providing a high-performance, professional-grade terminal for tracking stock, managing transactions, mapping warehouse locations, and reporting.
 
 ---
